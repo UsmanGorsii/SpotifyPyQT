@@ -91,15 +91,17 @@ class SpotifyViewer:
         chrome_options = ChromeOptions()
         chrome_options.add_argument("--disable-notifications")
         chrome_options.add_argument("--start-maximized")
+        chrome_options.add_argument('--ignore-certificate-errors')
+        chrome_options.add_argument('--ignore-ssl-errors')
         driver_fun = webdriver.Chrome(options=chrome_options)
         return driver_fun
 
     @staticmethod
     def get_firefox():
-        firefox_options = FireFoxOptions()
-        firefox_options.add_argument("--disable-notifications")
-        firefox_options.add_argument("--start-maximized")
-        driver_fun = webdriver.Firefox(options=firefox_options)
+        profile = webdriver.FirefoxProfile()
+        profile.accept_untrusted_certs = True
+        driver_fun = webdriver.Firefox(firefox_profile=profile)
+        driver_fun.maximize_window()
         return driver_fun
 
     def get_driver(self):
