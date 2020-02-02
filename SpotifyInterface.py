@@ -3,6 +3,7 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from SpotifyViewer import SpotifyViewer
 import threading
+import os
 from datetime import datetime
 import traceback, sys
 
@@ -34,8 +35,15 @@ class Worker(QRunnable):
 class Ui_SpotifyStreamer(object):
     def setupUi(self, SpotifyStreamer):
         self.running = False
-        self.chrome = True
-        self.firefox = False
+        self.chrome_var = True
+        self.firefox_var = False
+        self.username_var = ""
+        self.password_var = ""
+        self.song_link_var = ""
+        self.time_play_var = 1
+        if os.path.isfile('inputs.txt'):
+            self.load_saved_inputs()
+
         self.threadpool = QThreadPool()
         SpotifyStreamer.setObjectName("SpotifyStreamer")
         SpotifyStreamer.resize(600, 420)
@@ -71,8 +79,7 @@ class Ui_SpotifyStreamer(object):
         sizePolicy.setHeightForWidth(self.username.sizePolicy().hasHeightForWidth())
         self.username.setSizePolicy(sizePolicy)
         self.username.setObjectName("username")
-        
-
+        self.username.setText(str(self.username_var))
         self.horizontalLayout_2.addWidget(self.username)
         self.verticalLayout.addLayout(self.horizontalLayout_2)
         self.horizontalLayout_3 = QtWidgets.QHBoxLayout()
@@ -97,6 +104,7 @@ class Ui_SpotifyStreamer(object):
         sizePolicy.setHeightForWidth(self.password.sizePolicy().hasHeightForWidth())
         self.password.setSizePolicy(sizePolicy)
         self.password.setObjectName("password")
+        self.password.setText(str(self.password_var))
         self.horizontalLayout_3.addWidget(self.password)
         self.verticalLayout.addLayout(self.horizontalLayout_3)
         self.horizontalLayout_4 = QtWidgets.QHBoxLayout()
@@ -119,6 +127,7 @@ class Ui_SpotifyStreamer(object):
         sizePolicy.setHeightForWidth(self.song_link.sizePolicy().hasHeightForWidth())
         self.song_link.setSizePolicy(sizePolicy)
         self.song_link.setObjectName("song_link")
+        self.song_link.setText(str(self.song_link_var))
         self.horizontalLayout_4.addWidget(self.song_link)
         self.verticalLayout.addLayout(self.horizontalLayout_4)
         self.gridLayout_2.addLayout(self.verticalLayout, 0, 0, 1, 1)
@@ -165,7 +174,7 @@ class Ui_SpotifyStreamer(object):
         sizePolicy.setHeightForWidth(self.hoursToPlayForEdit.sizePolicy().hasHeightForWidth())
         self.hoursToPlayForEdit.setSizePolicy(sizePolicy)
         self.hoursToPlayForEdit.setObjectName("hours")
-        self.hoursToPlayForEdit.setText("1")
+        self.hoursToPlayForEdit.setText(str(self.time_play_var))
         self.horizontalLayout_9.addWidget(self.hoursToPlayForEdit)
         self.verticalLayout_2.addLayout(self.horizontalLayout_9)
         #region browser check boxes
@@ -221,22 +230,49 @@ class Ui_SpotifyStreamer(object):
         self.timeCheck.setObjectName("timeCheck")
         self.verticalLayout_2.addWidget(self.timeCheck)
 
+        self.saveCheck = QtWidgets.QCheckBox(self.centralwidget)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.saveCheck.sizePolicy().hasHeightForWidth())
+        self.saveCheck.setSizePolicy(sizePolicy)
+        self.saveCheck.setObjectName("saveCheck")
+        self.verticalLayout_2.addWidget(self.saveCheck)
+
         self.retranslateUi(SpotifyStreamer)
         QtCore.QMetaObject.connectSlotsByName(SpotifyStreamer)
         self.pushButton_2.setDisabled(True)
         self.pushButton.setDisabled(False)
         self.timeCheck.setChecked(True)
 
+    def load_saved_inputs(self):
+        with open('inputs.txt', 'r') as input_file:
+            first_line = input_file.readline()
+        split_data = first_line.split(';')
+        self.username_var = split_data[0]
+        self.password_var = split_data[1]
+        self.song_link_var = split_data[2]
+        self.time_play_var = float(split_data[3])
+        if split_data[4] == "True":
+            self.chrome_var = True
+        else:
+            self.chrome_var = False
+        if split_data[5] == "True":
+            self.firefox_var = True
+        else:
+            self.firefox_var = False
+
     def browser_selection(self):
         if self.chrome_RdBtn.isChecked():
-            self.chrome = True
+            self.chrome_var = True
         else:
-            self.chrome = False
+            self.chrome_var = False
 
         if self.firefox_RdBtn.isChecked():
-            self.firefox = True
+            self.firefox_var = True
         else:
-            self.firefox = False
+            self.firefox_var = False
+
     def start_stream(self):
         if not self.running:
             self.running = True
@@ -255,12 +291,24 @@ class Ui_SpotifyStreamer(object):
         print("Wait in Hours: {0}".format(str(int(total_time_in_sec)/(60*60))))
         return total_time_in_sec
 
+    def save_input(self):
+        with open("inputs.txt", 'w') as input_file:
+            input_file.write(self.username.text() + ";" + self.password.text() + ";" +
+                             self.song_link.text() + ";" + self.hoursToPlayForEdit.text() + ";" +
+                             str(self.chrome_var) + ";" + str(self.firefox_var))
+
     def run_viewer(self, progress_callback):
         import time
         if not self.timeCheck.isChecked():
             time.sleep(self.get_seconds_to_wait_for())
+        if self.saveCheck.isChecked():
+            self.save_input()
+        else:
+            if os.path.isfile('inputs.txt'):
+                os.remove('inputs.txt')
         self.streamer = SpotifyViewer(self.username.text(), self.password.text(),
-                                      self.song_link.text(), float(self.hoursToPlayForEdit.text()), self.chrome, self.firefox)
+                                      self.song_link.text(), float(self.hoursToPlayForEdit.text()), self.chrome_var,
+                                      self.firefox_var)
         self.streamer.run_viewer()
         return True
 
@@ -282,6 +330,7 @@ class Ui_SpotifyStreamer(object):
         self.pushButton.setText(_translate("SpotifyStreamer", "Start "))
         self.pushButton_2.setText(_translate("SpotifyStreamer", "Stop "))
         self.timeCheck.setText(_translate("SpotifyStreamer", "Play Immediately! "))
+        self.saveCheck.setText(_translate("SpotifyStreamer", "Save Inputs"))
         self.actionClose.setText(_translate("SpotifyStreamer", "Close"))
         self.chrome_RdBtn.setText(_translate("SpotifyStreamer", "Chrome"))
         self.firefox_RdBtn.setText(_translate("SpotifyStreamer", "Firefox"))
