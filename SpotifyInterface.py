@@ -294,8 +294,3 @@ if __name__ == "__main__":
     ui.setupUi(main_window)
     main_window.show()
     sys.exit(app.exec_())
-
-"""
-secan.akbulut@gmail.com
-Hasosecan123
-"""
