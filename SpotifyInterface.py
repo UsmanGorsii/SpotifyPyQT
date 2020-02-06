@@ -41,6 +41,7 @@ class Ui_SpotifyStreamer(object):
         self.password_var = ""
         self.song_link_var = ""
         self.time_play_var = 1
+        self.how_many_times = 1
         if os.path.isfile('inputs.txt'):
             self.load_saved_inputs()
 
@@ -154,8 +155,8 @@ class Ui_SpotifyStreamer(object):
         self.timeEdit.setSizePolicy(sizePolicy)
         self.timeEdit.setObjectName("timeEdit")
         self.horizontalLayout.addWidget(self.timeEdit)
-
         self.verticalLayout_2.addLayout(self.horizontalLayout)
+
         self.horizontalLayout_9 = QtWidgets.QHBoxLayout()
         self.horizontalLayout_9.setObjectName("horizontalLayout_9")
         self.label_5 = QtWidgets.QLabel(self.centralwidget)
@@ -177,6 +178,29 @@ class Ui_SpotifyStreamer(object):
         self.hoursToPlayForEdit.setText(str(self.time_play_var))
         self.horizontalLayout_9.addWidget(self.hoursToPlayForEdit)
         self.verticalLayout_2.addLayout(self.horizontalLayout_9)
+
+        self.horizontalLayout_11 = QtWidgets.QHBoxLayout()
+        self.horizontalLayout_11.setObjectName("horizontalLayout_11")
+        self.label_6 = QtWidgets.QLabel(self.centralwidget)
+        font = QtGui.QFont()
+        font.setPointSize(9)
+        font.setBold(True)
+        font.setWeight(75)
+        self.label_6.setFont(font)
+        self.label_6.setAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignTrailing | QtCore.Qt.AlignVCenter)
+        self.label_6.setObjectName("label_6")
+        self.horizontalLayout_11.addWidget(self.label_6)
+        self.howmanytimes = QtWidgets.QLineEdit(self.centralwidget)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.howmanytimes.sizePolicy().hasHeightForWidth())
+        self.howmanytimes.setSizePolicy(sizePolicy)
+        self.howmanytimes.setObjectName("number")
+        self.howmanytimes.setText(str(self.how_many_times))
+        self.horizontalLayout_11.addWidget(self.howmanytimes)
+        self.verticalLayout_2.addLayout(self.horizontalLayout_11)
+
         #region browser check boxes
         self.horizontalLayout_10 = QtWidgets.QHBoxLayout()
         self.horizontalLayout_10.setContentsMargins(250, 0, 0, -1)
@@ -261,6 +285,8 @@ class Ui_SpotifyStreamer(object):
             self.firefox_var = True
         else:
             self.firefox_var = False
+        self.how_many_times = float(split_data[6])
+
 
     def browser_selection(self):
         if self.chrome_RdBtn.isChecked():
@@ -295,7 +321,7 @@ class Ui_SpotifyStreamer(object):
         with open("inputs.txt", 'w') as input_file:
             input_file.write(self.username.text() + ";" + self.password.text() + ";" +
                              self.song_link.text() + ";" + self.hoursToPlayForEdit.text() + ";" +
-                             str(self.chrome_var) + ";" + str(self.firefox_var))
+                             str(self.chrome_var) + ";" + str(self.firefox_var) + ";" + self.howmanytimes.text())
 
     def run_viewer(self, progress_callback):
         import time
@@ -308,7 +334,7 @@ class Ui_SpotifyStreamer(object):
                 os.remove('inputs.txt')
         self.streamer = SpotifyViewer(self.username.text(), self.password.text(),
                                       self.song_link.text(), float(self.hoursToPlayForEdit.text()), self.chrome_var,
-                                      self.firefox_var)
+                                      self.firefox_var, self.howmanytimes.text())
         self.streamer.run_viewer()
         return True
 
@@ -326,7 +352,8 @@ class Ui_SpotifyStreamer(object):
         self.label_3.setText(_translate("SpotifyStreamer", "Password:"))
         self.label_4.setText(_translate("SpotifyStreamer", "Song/Artist/Playlist Link:"))
         self.label.setText(_translate("SpotifyStreamer", "Time at which song is played"))
-        self.label_5.setText(_translate("SpotifyStreamer", "For how long (hours):"))
+        self.label_5.setText(_translate("SpotifyStreamer", "For how long (hours)(Tip:less then 6 Hrs):"))
+        self.label_6.setText(_translate("SpotifyStreamer", "How many times to play:"))
         self.pushButton.setText(_translate("SpotifyStreamer", "Start "))
         self.pushButton_2.setText(_translate("SpotifyStreamer", "Stop "))
         self.timeCheck.setText(_translate("SpotifyStreamer", "Play Immediately! "))

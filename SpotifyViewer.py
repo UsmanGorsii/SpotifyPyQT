@@ -11,7 +11,7 @@ from selenium.webdriver.firefox.options import Options as FireFoxOptions
 
 
 class SpotifyViewer:
-    def __init__(self, username, password, song_link, time_to_play, chrome=False, firefox=False):
+    def __init__(self, username, password, song_link, time_to_play, chrome=False, firefox=False, how_many_times=1):
         self.username = username
         self.chrome = chrome
         self.firefox = firefox
@@ -22,7 +22,9 @@ class SpotifyViewer:
         self.anti_re_captcha_key = "64d5877a4330ce8101f78fa2f2f6a5f6"
         self.driver = None
         self.time_to_play = time_to_play
+        self.how_many_times = float(how_many_times)
         self.notified = False
+        self.working = True
         self.repeat_dict = {"Enable repeat": "Disable repeat",
                             "Enable repeat one": "Enable repeat",
                             "Disable repeat": "Enable repeat one"}
@@ -193,29 +195,32 @@ class SpotifyViewer:
 
     def run_viewer(self):
         # try:
-        while True:
-            self.driver = self.get_driver()
-            self.login(self.username, self.password)
-            if self.is_visible('//span[@ng-if="response.error"]', timeout=8):
-                print("Login Failed: ", self.username)
-                self.driver.close()
-                return
-            self.redirect_to_song()
-            if self.song_link.__contains__("track"):
-                self.repeat_fun('Enable repeat one')
-            else:
-                self.repeat_fun('Enable repeat')
+        self.working = True
+        for i in range(0, int(self.how_many_times)):
+            while True and self.working:
+                self.driver = self.get_driver()
+                self.login(self.username, self.password)
+                if self.is_visible('//span[@ng-if="response.error"]', timeout=8):
+                    print("Login Failed: ", self.username)
+                    self.driver.close()
+                    return
+                self.redirect_to_song()
+                if self.song_link.__contains__("track"):
+                    self.repeat_fun('Enable repeat one')
+                else:
+                    self.repeat_fun('Enable repeat')
 
-            start_again = self.check_song_time()
-            self.driver.close()
-            if start_again:
-                break
+                start_again = self.check_song_time()
+                self.driver.close()
+                if start_again:
+                    break
 
         # except:
         #     pass
 
     def stop_stream(self):
         try:
+            self.working = False
             self.driver.close()
         except:
             pass
